@@ -1,0 +1,63 @@
+{% extends 'games/base.html' %}
+{% load static %}
+{% block titulo %}Ruleta{% endblock %}
+
+{% block contenido %}
+<section class="contenedor seccion ruleta">
+  <h1>La ruleta de RaleGames</h1>
+  <p class="panel__sub">Elige cómo te sientes y cuánto tiempo tienes. Nosotros elegimos el juego.</p>
+
+  <form method="get" id="form-ruleta" data-api="{% url 'api-ruleta' %}" data-juego="{% url 'juego' 0 %}">
+    <fieldset>
+      <legend>1. ¿Cómo te sientes?</legend>
+      <div class="animos">
+        {% for a in animos %}
+          <label class="animo animo--opcion">
+            <input type="radio" name="animo" value="{{ a.clave }}" required {% if animo == a.clave %}checked{% endif %}>
+            <span class="animo__icono">{{ a.icono }}</span>
+            <strong>{{ a.nombre }}</strong>
+            <small>{{ a.descripcion }}</small>
+          </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. ¿Cuánto tiempo tienes?</legend>
+      <div class="chips">
+        {% for clave, nombre in tiempos %}
+          <label class="chip chip--opcion">
+            <input type="radio" name="tiempo" value="{{ clave }}" {% if tiempo == clave %}checked{% endif %}>
+            {{ nombre }}
+          </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <button type="submit" class="boton boton--grande" id="boton-girar">🎲 Girar la ruleta</button>
+    <p class="error" id="error-ruleta"></p>
+  </form>
+
+  <div id="resultado" class="resultado" aria-live="polite">
+    {% if error_api %}
+      <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta de nuevo.</p>
+    {% elif girado and resultado %}
+      <div class="resultado__carta">
+        {% if resultado.imagen %}<img src="{{ resultado.imagen }}" alt="">{% else %}<div class="resultado__vacio">{{ resultado.nombre|first }}</div>{% endif %}
+        <div class="resultado__info">
+          <p class="etiqueta">Hoy te toca jugar…</p>
+          <h2>{{ resultado.nombre }}</h2>
+          <p>{{ resultado.generos|join:", " }}{% if resultado.horas %} · ⏱ {{ resultado.horas }} h{% endif %}{% if resultado.metacritic %} · Metacritic {{ resultado.metacritic }}{% endif %}</p>
+          <a class="boton" href="{% url 'juego' resultado.id %}">Ver el juego</a>
+        </div>
+      </div>
+    {% elif girado %}
+      <p class="vacio">No encontramos juegos con ese filtro. Prueba con otro ánimo.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'games/js/ruleta.js' %}"></script>
+{% endblock %}

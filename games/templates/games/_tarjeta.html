@@ -1,0 +1,19 @@
+<a class="tarjeta" href="{% url 'juego' juego.id %}">
+  {% if juego.imagen %}
+    <img class="tarjeta__img" src="{{ juego.imagen }}" alt="" loading="lazy">
+  {% else %}
+    <div class="tarjeta__img tarjeta__img--vacia" aria-hidden="true">{{ juego.nombre|first }}</div>
+  {% endif %}
+  <div class="tarjeta__cuerpo">
+    <h3>{{ juego.nombre }}</h3>
+    <p class="tarjeta__meta">
+      {% if juego.lanzamiento %}{{ juego.lanzamiento|slice:":4" }}{% endif %}
+      {% if juego.generos %} · {{ juego.generos|slice:":2"|join:", " }}{% endif %}
+    </p>
+    <div class="tarjeta__datos">
+      {% if juego.metacritic %}<span class="meta">{{ juego.metacritic }}</span>{% endif %}
+      {% if juego.horas %}<span>⏱ {{ juego.horas }} h</span>{% endif %}
+      {% if juego.rating %}<span>★ {{ juego.rating|floatformat:1 }}</span>{% endif %}
+    </div>
+  </div>
+</a>

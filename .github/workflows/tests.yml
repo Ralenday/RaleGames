@@ -1,0 +1,27 @@
+name: Pruebas
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      # El .env no está en el repositorio: en CI la llave se genera al vuelo
+      # y las pruebas corren en modo demo (sin RAWG_API_KEY)
+      - name: Ejecutar pruebas
+        env:
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY || 'llave-solo-para-ci' }}
+        run: python manage.py test

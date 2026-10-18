@@ -1,0 +1,61 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}RaleGames{% endblock %} · RaleGames</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'games/css/styles.css' %}">
+</head>
+<body>
+  <header class="barra">
+    <div class="contenedor barra__fila">
+      <a class="logo" href="{% url 'inicio' %}">Rale<span>Games</span></a>
+      <input type="checkbox" id="menu" class="barra__toggle" aria-label="Abrir menú">
+      <label for="menu" class="barra__hamburguesa" aria-hidden="true"><span></span></label>
+      <nav class="barra__nav">
+        <a href="{% url 'explorar' %}" {% if request.resolver_match.url_name == 'explorar' %}class="activo"{% endif %}>Explorar</a>
+        <a href="{% url 'ruleta' %}" {% if request.resolver_match.url_name == 'ruleta' %}class="activo"{% endif %}>Ruleta</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'bitacora' %}" {% if request.resolver_match.url_name == 'bitacora' %}class="activo"{% endif %}>Mi bitácora</a>
+          <form method="post" action="{% url 'logout' %}" class="barra__salir">
+            {% csrf_token %}
+            <button type="submit" class="boton boton--fantasma">Salir ({{ user.username }})</button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}">Entrar</a>
+          <a href="{% url 'registro' %}" class="boton">Crear cuenta</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  {% if modo_demo %}
+    <div class="aviso-demo">
+      Modo demo: no hay <code>RAWG_API_KEY</code> en el archivo <code>.env</code>, se muestran 16 juegos de ejemplo.
+    </div>
+  {% endif %}
+
+  {% if messages %}
+    <div class="contenedor mensajes">
+      {% for message in messages %}
+        <p class="mensaje mensaje--{{ message.tags }}">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main>
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">
+      <p><strong>RaleGames</strong> — no vendemos juegos, te ayudamos a decidir cuál jugar.</p>
+      <p>Datos de videojuegos proporcionados por <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>.</p>
+    </div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

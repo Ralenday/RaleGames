@@ -1,0 +1,64 @@
+{% extends 'games/base.html' %}
+{% block titulo %}{{ juego.nombre|default:'Juego' }}{% endblock %}
+
+{% block contenido %}
+{% if error_api %}
+  <section class="contenedor seccion">
+    <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta de nuevo en un minuto.</p>
+  </section>
+{% else %}
+<section class="portada">
+  {% if juego.imagen %}<img class="portada__fondo" src="{{ juego.imagen }}" alt="">{% endif %}
+  <div class="contenedor portada__contenido">
+    <a class="volver" href="{% url 'explorar' %}">← Explorar</a>
+    <h1>{{ juego.nombre }}</h1>
+    <div class="portada__datos">
+      {% if juego.metacritic %}<span class="meta meta--grande">{{ juego.metacritic }}</span>{% endif %}
+      {% if juego.lanzamiento %}<span>📅 {{ juego.lanzamiento }}</span>{% endif %}
+      {% if juego.horas %}<span>⏱ {{ juego.horas }} h promedio</span>{% endif %}
+      {% if juego.rating %}<span>★ {{ juego.rating|floatformat:1 }} / 5</span>{% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="contenedor detalle">
+  <article>
+    <h2>Acerca del juego</h2>
+    <div class="detalle__texto">{{ juego.descripcion|default:'Sin descripción disponible.'|linebreaks }}</div>
+
+    {% if juego.capturas %}
+      <h2>Capturas</h2>
+      <div class="capturas">
+        {% for captura in juego.capturas %}
+          <a href="{{ captura }}" target="_blank" rel="noopener"><img src="{{ captura }}" alt="Captura de {{ juego.nombre }}" loading="lazy"></a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </article>
+
+  <aside class="panel detalle__lateral">
+    <h3>Mi bitácora</h3>
+    {% if not user.is_authenticated %}
+      <p><a href="{% url 'login' %}?next={{ request.path }}">Entra</a> o <a href="{% url 'registro' %}">crea una cuenta</a> para guardar este juego.</p>
+    {% elif entrada %}
+      <p class="estado estado--{{ entrada.estado }}">{{ entrada.get_estado_display }}</p>
+      <a class="boton boton--fantasma boton--bloque" href="{% url 'bitacora' %}">Ver en mi bitácora</a>
+    {% else %}
+      <form method="post" action="{% url 'agregar' juego.id %}" class="agregar">
+        {% csrf_token %}
+        <button name="estado" value="pendiente" class="boton boton--bloque">+ Quiero jugarlo</button>
+        <button name="estado" value="jugando" class="boton boton--fantasma boton--bloque">Lo estoy jugando</button>
+        <button name="estado" value="terminado" class="boton boton--fantasma boton--bloque">Ya lo terminé</button>
+      </form>
+    {% endif %}
+
+    <dl class="ficha">
+      {% if juego.generos %}<dt>Géneros</dt><dd>{{ juego.generos|join:", " }}</dd>{% endif %}
+      {% if juego.plataformas %}<dt>Plataformas</dt><dd>{{ juego.plataformas|join:", " }}</dd>{% endif %}
+      {% if juego.desarrolladores %}<dt>Desarrolla</dt><dd>{{ juego.desarrolladores|join:", " }}</dd>{% endif %}
+      {% if juego.sitio %}<dt>Sitio oficial</dt><dd><a href="{{ juego.sitio }}" target="_blank" rel="noopener">Visitar</a></dd>{% endif %}
+    </dl>
+  </aside>
+</section>
+{% endif %}
+{% endblock %}

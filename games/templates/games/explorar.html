@@ -1,0 +1,38 @@
+{% extends 'games/base.html' %}
+{% block titulo %}Explorar{% endblock %}
+
+{% block contenido %}
+<section class="contenedor seccion">
+  <h1>Explorar juegos</h1>
+  <form method="get" class="buscador" role="search">
+    <input type="search" name="q" value="{{ q }}" placeholder="Busca un juego: Zelda, Minecraft, Hades…" maxlength="100" aria-label="Buscar juego">
+    {% if genero %}<input type="hidden" name="genero" value="{{ genero }}">{% endif %}
+    <button type="submit" class="boton">Buscar</button>
+  </form>
+
+  <div class="chips">
+    <a class="chip {% if not genero %}chip--activo{% endif %}" href="?q={{ q|urlencode }}">Todos</a>
+    {% for slug, nombre in generos %}
+      <a class="chip {% if genero == slug %}chip--activo{% endif %}" href="?q={{ q|urlencode }}&genero={{ slug }}">{{ nombre }}</a>
+    {% endfor %}
+  </div>
+
+  {% if error_api %}
+    <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta de nuevo en un minuto.</p>
+  {% elif juegos %}
+    <div class="rejilla">
+      {% for juego in juegos %}{% include 'games/_tarjeta.html' %}{% endfor %}
+    </div>
+    <nav class="paginacion">
+      {% if pagina > 1 %}
+        <a class="boton boton--fantasma" href="?q={{ q|urlencode }}&genero={{ genero }}&pagina={{ pagina|add:'-1' }}">← Anterior</a>
+      {% endif %}
+      {% if hay_mas %}
+        <a class="boton boton--fantasma" href="?q={{ q|urlencode }}&genero={{ genero }}&pagina={{ pagina|add:'1' }}">Siguiente →</a>
+      {% endif %}
+    </nav>
+  {% else %}
+    <p class="vacio">No encontramos juegos{% if q %} para “{{ q }}”{% endif %}. Prueba con otro nombre.</p>
+  {% endif %}
+</section>
+{% endblock %}

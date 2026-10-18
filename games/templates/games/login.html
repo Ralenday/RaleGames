@@ -1,0 +1,30 @@
+{% extends 'games/base.html' %}
+{% block titulo %}Entrar{% endblock %}
+
+{% block contenido %}
+<section class="contenedor formulario-pagina">
+  <div class="panel">
+    <h1>Bienvenido de vuelta</h1>
+    <p class="panel__sub">Entra para ver tu bitácora.</p>
+
+    {% if form.errors %}
+      <div class="error-general">Gamertag o contraseña incorrectos.</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="campo">
+        <label for="id_username">Gamertag</label>
+        <input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" required autocomplete="username" autofocus>
+      </div>
+      <div class="campo">
+        <label for="id_password">Contraseña</label>
+        <input type="password" name="password" id="id_password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="boton boton--grande boton--bloque">Entrar</button>
+    </form>
+    <p class="panel__pie">¿Nuevo por aquí? <a href="{% url 'registro' %}">Crea tu cuenta</a></p>
+  </div>
+</section>
+{% endblock %}

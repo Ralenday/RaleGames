@@ -1,0 +1,19 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+
+# Secretos: llaves de API y SECRET_KEY
+.env
+
+# Base de datos local y logs
+db.sqlite3
+*.log
+
+# Editor / sistema
+.vscode/
+.idea/
+.directory

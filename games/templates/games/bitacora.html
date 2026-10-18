@@ -1,0 +1,63 @@
+{% extends 'games/base.html' %}
+{% block titulo %}Mi bitácora{% endblock %}
+
+{% block contenido %}
+<section class="contenedor seccion">
+  <div class="seccion__cabecera">
+    <div>
+      <h1>Bitácora de {{ user.username }}</h1>
+      {% if user.perfil %}<p class="panel__sub">Jugador de {{ user.perfil.get_plataforma_display }}</p>{% endif %}
+    </div>
+    <a class="boton" href="{% url 'ruleta' %}">🎲 Buscar algo nuevo</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><strong>{{ total }}</strong><span>juegos guardados</span></div>
+    {% for col in columnas %}
+      <div class="stat stat--{{ col.clave }}"><strong>{{ col.total }}</strong><span>{{ col.nombre|lower }}</span></div>
+    {% endfor %}
+    <div class="stat"><strong>{{ horas }}</strong><span>horas en juegos terminados</span></div>
+  </div>
+
+  {% if not total %}
+    <div class="vacio">
+      <p>Tu bitácora está vacía.</p>
+      <p><a href="{% url 'ruleta' %}">Gira la ruleta</a> o <a href="{% url 'explorar' %}">explora juegos</a> y guarda el primero.</p>
+    </div>
+  {% else %}
+    <div class="tablero">
+      {% for col in columnas %}
+        <div class="columna columna--{{ col.clave }}">
+          <h2>{{ col.nombre }} <span>{{ col.total }}</span></h2>
+          {% for entrada, form in col.entradas %}
+            <article class="entrada">
+              <a href="{% url 'juego' entrada.rawg_id %}" class="entrada__titulo">
+                {% if entrada.imagen %}<img src="{{ entrada.imagen }}" alt="">{% else %}<span class="entrada__vacio">{{ entrada.titulo|first }}</span>{% endif %}
+                <strong>{{ entrada.titulo }}</strong>
+              </a>
+              {% if entrada.calificacion %}<p class="estrellas">{% for i in "12345"|make_list %}{% if forloop.counter <= entrada.calificacion %}★{% else %}☆{% endif %}{% endfor %}</p>{% endif %}
+              {% if entrada.nota %}<p class="entrada__nota">“{{ entrada.nota }}”</p>{% endif %}
+              <details>
+                <summary>Editar</summary>
+                <form method="post" action="{% url 'actualizar' entrada.pk %}" class="entrada__form">
+                  {% csrf_token %}
+                  {{ form.estado }}
+                  {{ form.calificacion }}
+                  {{ form.nota }}
+                  <button type="submit" class="boton">Guardar</button>
+                </form>
+                <form method="post" action="{% url 'eliminar' entrada.pk %}" onsubmit="return confirm('¿Quitar {{ entrada.titulo|escapejs }} de tu bitácora?')">
+                  {% csrf_token %}
+                  <button type="submit" class="enlace-peligro">Quitar de la bitácora</button>
+                </form>
+              </details>
+            </article>
+          {% empty %}
+            <p class="columna__vacia">Nada por aquí.</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

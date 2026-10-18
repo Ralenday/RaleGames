@@ -1,0 +1,72 @@
+{% extends 'games/base.html' %}
+{% block titulo %}Inicio{% endblock %}
+
+{% block contenido %}
+<section class="hero">
+  <div class="contenedor hero__fila">
+    <div>
+      <p class="etiqueta">Tu centro de mando gamer</p>
+      <h1>¿No sabes qué jugar hoy?</h1>
+      <p class="hero__texto">
+        Dinos cómo te sientes y cuánto tiempo tienes: la ruleta de RaleGames elige un juego por ti
+        entre más de 500,000 títulos. Después llévalo a tu bitácora y registra lo que juegas,
+        lo que terminas y lo que abandonas.
+      </p>
+      <div class="hero__acciones">
+        <a class="boton boton--grande" href="{% url 'ruleta' %}">Girar la ruleta</a>
+        {% if not user.is_authenticated %}
+          <a class="boton boton--fantasma boton--grande" href="{% url 'registro' %}">Crear mi bitácora</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if del_dia %}
+      <a class="del-dia" href="{% url 'juego' del_dia.id %}">
+        <span class="del-dia__etiqueta">Juego del día</span>
+        {% if del_dia.imagen %}
+          <img src="{{ del_dia.imagen }}" alt="">
+        {% else %}
+          <div class="del-dia__vacio" aria-hidden="true">{{ del_dia.nombre|first }}</div>
+        {% endif %}
+        <div class="del-dia__info">
+          <strong>{{ del_dia.nombre }}</strong>
+          <span>{{ del_dia.generos|join:", " }}</span>
+        </div>
+      </a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="contenedor seccion">
+  <h2>¿Cómo te sientes?</h2>
+  <div class="animos">
+    {% for animo in animos %}
+      <a class="animo" href="{% url 'ruleta' %}?animo={{ animo.clave }}">
+        <span class="animo__icono">{{ animo.icono }}</span>
+        <strong>{{ animo.nombre }}</strong>
+        <small>{{ animo.descripcion }}</small>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="contenedor seccion">
+  <div class="seccion__cabecera">
+    <h2>Lo más jugado este año</h2>
+    <a href="{% url 'explorar' %}">Ver más →</a>
+  </div>
+  {% if error_api %}
+    <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta recargar en un minuto.</p>
+  {% else %}
+    <div class="rejilla">
+      {% for juego in populares %}{% include 'games/_tarjeta.html' %}{% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+<section class="contenedor seccion pasos">
+  <div class="paso"><span>1</span><h3>Elige tu ánimo</h3><p>Relajado, con adrenalina, con amigos… y cuánto tiempo tienes.</p></div>
+  <div class="paso"><span>2</span><h3>Gira la ruleta</h3><p>Te sugerimos un juego real con su calificación, duración y plataformas.</p></div>
+  <div class="paso"><span>3</span><h3>Llévalo a tu bitácora</h3><p>Marca si lo quieres jugar, lo estás jugando o ya lo terminaste.</p></div>
+</section>
+{% endblock %}
