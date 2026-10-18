@@ -229,6 +229,7 @@ class IgdbClienteTests(TestCase):
         self.assertEqual(juego['lanzamiento'], '2015-05-19')
         self.assertEqual((juego['rating'], juego['metacritic'], juego['horas']), (4.7, 93, 51))
         self.assertIn('t_cover_big/co1wyy.jpg', juego['imagen'])
+        self.assertEqual(juego['generos'], ['RPG'])
 
     @patch('games.services.requests.post')
     def test_comillas_no_rompen_la_consulta(self, post):

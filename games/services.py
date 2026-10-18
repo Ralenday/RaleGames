@@ -94,6 +94,19 @@ def _consultar(endpoint, consulta):
     return datos
 
 
+# IGDB devuelve los géneros en inglés
+GENEROS_ES = {
+    'Adventure': 'Aventura', 'Arcade': 'Arcade', 'Card & Board Game': 'Cartas y tablero',
+    'Fighting': 'Pelea', "Hack and slash/Beat 'em up": 'Hack and slash', 'Indie': 'Indie',
+    'MOBA': 'MOBA', 'Music': 'Música', 'Pinball': 'Pinball', 'Platform': 'Plataformas',
+    'Point-and-click': 'Point and click', 'Puzzle': 'Puzzle', 'Quiz/Trivia': 'Trivia',
+    'Racing': 'Carreras', 'Real Time Strategy (RTS)': 'Estrategia en tiempo real',
+    'Role-playing (RPG)': 'RPG', 'Shooter': 'Shooter', 'Simulator': 'Simulación',
+    'Sport': 'Deportes', 'Strategy': 'Estrategia', 'Tactical': 'Táctico',
+    'Turn-based strategy (TBS)': 'Estrategia por turnos', 'Visual Novel': 'Novela visual',
+}
+
+
 def _imagen(imagen_id, tamano):
     return IMAGEN_URL.format(tamano=tamano, id=imagen_id)
 
@@ -119,7 +132,7 @@ def normalizar_juego(crudo):
         'lanzamiento': datetime.fromtimestamp(fecha, timezone.utc).date().isoformat() if fecha else '',
         'rating': round((crudo.get('total_rating') or 0) / 20, 1),   # IGDB califica de 0 a 100
         'metacritic': round(critica) if critica else None,          # promedio de la crítica
-        'generos': [g['name'] for g in crudo.get('genres') or []],
+        'generos': [GENEROS_ES.get(g['name'], g['name']) for g in crudo.get('genres') or []],
         'plataformas': [p['name'] for p in crudo.get('platforms') or []],
         'horas': 0,
         'descripcion': crudo.get('summary') or crudo.get('storyline') or '',
