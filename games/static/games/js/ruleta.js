@@ -40,7 +40,7 @@
     const info = crear('div', 'resultado__info');
     const datos = [juego.generos.join(', ')];
     if (juego.horas) datos.push(`⏱ ${juego.horas} h`);
-    if (juego.metacritic) datos.push(`Metacritic ${juego.metacritic}`);
+    if (juego.metacritic) datos.push(`Crítica ${juego.metacritic}`);
 
     const enlace = crear('a', 'boton', 'Ver el juego');
     enlace.href = form.dataset.juego.replace('/0/', `/${encodeURIComponent(juego.id)}/`);

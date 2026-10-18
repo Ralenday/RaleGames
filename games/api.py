@@ -26,12 +26,12 @@ class BitacoraViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_buscar(request):
-    """Proxy hacia RAWG: el navegador nunca ve la llave de la API."""
+    """Proxy hacia IGDB: el navegador nunca ve la llave de la API."""
     texto = request.GET.get('q', '').strip()[:100]
     try:
         return Response(services.buscar_juegos(texto))
-    except services.RawgError:
-        return Response({'detail': 'RAWG no está disponible'}, status=503)
+    except services.IgdbError:
+        return Response({'detail': 'IGDB no está disponible'}, status=503)
 
 
 @api_view(['GET'])
@@ -42,8 +42,8 @@ def api_ruleta(request):
         return Response({'detail': 'Ánimo no válido', 'opciones': list(services.ANIMOS)}, status=400)
     try:
         juego = services.girar_ruleta(animo, request.GET.get('tiempo', 'cualquiera'))
-    except services.RawgError:
-        return Response({'detail': 'RAWG no está disponible'}, status=503)
+    except services.IgdbError:
+        return Response({'detail': 'IGDB no está disponible'}, status=503)
     if juego is None:
         return Response({'detail': 'No encontramos juegos con ese filtro'}, status=404)
     return Response(juego)

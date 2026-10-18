@@ -40,14 +40,14 @@
 
   <div id="resultado" class="resultado" aria-live="polite">
     {% if error_api %}
-      <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta de nuevo.</p>
+      <p class="vacio">No pudimos conectar con IGDB en este momento. Intenta de nuevo.</p>
     {% elif girado and resultado %}
       <div class="resultado__carta">
         {% if resultado.imagen %}<img src="{{ resultado.imagen }}" alt="">{% else %}<div class="resultado__vacio">{{ resultado.nombre|first }}</div>{% endif %}
         <div class="resultado__info">
           <p class="etiqueta">Hoy te toca jugar…</p>
           <h2>{{ resultado.nombre }}</h2>
-          <p>{{ resultado.generos|join:", " }}{% if resultado.horas %} · ⏱ {{ resultado.horas }} h{% endif %}{% if resultado.metacritic %} · Metacritic {{ resultado.metacritic }}{% endif %}</p>
+          <p>{{ resultado.generos|join:", " }}{% if resultado.horas %} · ⏱ {{ resultado.horas }} h{% endif %}{% if resultado.metacritic %} · Crítica {{ resultado.metacritic }}{% endif %}</p>
           <a class="boton" href="{% url 'juego' resultado.id %}">Ver el juego</a>
         </div>
       </div>

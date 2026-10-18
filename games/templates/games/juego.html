@@ -4,7 +4,7 @@
 {% block contenido %}
 {% if error_api %}
   <section class="contenedor seccion">
-    <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta de nuevo en un minuto.</p>
+    <p class="vacio">No pudimos conectar con IGDB en este momento. Intenta de nuevo en un minuto.</p>
   </section>
 {% else %}
 <section class="portada">
@@ -13,9 +13,9 @@
     <a class="volver" href="{% url 'explorar' %}">← Explorar</a>
     <h1>{{ juego.nombre }}</h1>
     <div class="portada__datos">
-      {% if juego.metacritic %}<span class="meta meta--grande">{{ juego.metacritic }}</span>{% endif %}
+      {% if juego.metacritic %}<span class="meta meta--grande" title="Calificación de la crítica">{{ juego.metacritic }}</span>{% endif %}
       {% if juego.lanzamiento %}<span>📅 {{ juego.lanzamiento }}</span>{% endif %}
-      {% if juego.horas %}<span>⏱ {{ juego.horas }} h promedio</span>{% endif %}
+      {% if juego.horas %}<span>⏱ {{ juego.horas }} h para terminarlo</span>{% endif %}
       {% if juego.rating %}<span>★ {{ juego.rating|floatformat:1 }} / 5</span>{% endif %}
     </div>
   </div>
@@ -56,7 +56,7 @@
       {% if juego.generos %}<dt>Géneros</dt><dd>{{ juego.generos|join:", " }}</dd>{% endif %}
       {% if juego.plataformas %}<dt>Plataformas</dt><dd>{{ juego.plataformas|join:", " }}</dd>{% endif %}
       {% if juego.desarrolladores %}<dt>Desarrolla</dt><dd>{{ juego.desarrolladores|join:", " }}</dd>{% endif %}
-      {% if juego.sitio %}<dt>Sitio oficial</dt><dd><a href="{{ juego.sitio }}" target="_blank" rel="noopener">Visitar</a></dd>{% endif %}
+      {% if juego.sitio %}<dt>Más información</dt><dd><a href="{{ juego.sitio }}" target="_blank" rel="noopener">Ver en IGDB</a></dd>{% endif %}
     </dl>
   </aside>
 </section>

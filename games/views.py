@@ -10,21 +10,13 @@ from . import services
 from .forms import EntradaForm, RegistroForm
 from .models import Entrada
 
-# Géneros de RAWG que se muestran como filtros en Explorar (slug, nombre)
-GENEROS = [
-    ('action', 'Acción'), ('adventure', 'Aventura'), ('role-playing-games-rpg', 'RPG'),
-    ('strategy', 'Estrategia'), ('shooter', 'Shooter'), ('puzzle', 'Puzzle'),
-    ('platformer', 'Plataformas'), ('simulation', 'Simulación'), ('indie', 'Indie'),
-    ('racing', 'Carreras'), ('sports', 'Deportes'), ('casual', 'Casual'),
-]
-
 
 def inicio(request):
     contexto = {'animos': services.ANIMOS.values()}
     try:
         contexto['populares'] = services.populares()
         contexto['del_dia'] = services.juego_del_dia()
-    except services.RawgError:
+    except services.IgdbError:
         contexto['error_api'] = True
     return render(request, 'games/inicio.html', contexto)
 
@@ -45,17 +37,17 @@ def registro(request):
 def explorar(request):
     texto = request.GET.get('q', '').strip()[:100]
     genero = request.GET.get('genero', '')
-    if genero not in dict(GENEROS):
+    if genero not in services.GENEROS:
         genero = ''
     try:
         pagina = max(1, int(request.GET.get('pagina', 1)))
     except ValueError:
         pagina = 1
 
-    contexto = {'q': texto, 'genero': genero, 'generos': GENEROS, 'pagina': pagina}
+    contexto = {'q': texto, 'genero': genero, 'generos': [(slug, datos[0]) for slug, datos in services.GENEROS.items()], 'pagina': pagina}
     try:
         contexto.update(services.buscar_juegos(texto, genero, pagina))
-    except services.RawgError:
+    except services.IgdbError:
         contexto['error_api'] = True
     return render(request, 'games/explorar.html', contexto)
 
@@ -63,14 +55,14 @@ def explorar(request):
 def juego_detalle(request, juego_id):
     try:
         juego = services.detalle_juego(juego_id)
-    except services.RawgError:
+    except services.IgdbError:
         return render(request, 'games/juego.html', {'error_api': True})
     if juego is None:
         raise Http404('Ese juego no existe')
 
     entrada = None
     if request.user.is_authenticated:
-        entrada = Entrada.objects.filter(user=request.user, rawg_id=juego_id).first()
+        entrada = Entrada.objects.filter(user=request.user, juego_id=juego_id).first()
     return render(request, 'games/juego.html', {'juego': juego, 'entrada': entrada})
 
 
@@ -86,7 +78,7 @@ def ruleta(request):
         try:
             contexto['resultado'] = services.girar_ruleta(contexto['animo'], contexto['tiempo'])
             contexto['girado'] = True
-        except services.RawgError:
+        except services.IgdbError:
             contexto['error_api'] = True
     return render(request, 'games/ruleta.html', contexto)
 
@@ -118,8 +110,8 @@ def agregar_a_bitacora(request, juego_id):
     # no se confía en títulos o imágenes enviados desde el navegador
     try:
         juego = services.detalle_juego(juego_id)
-    except services.RawgError:
-        messages.error(request, 'No pudimos conectar con RAWG. Intenta de nuevo en un momento.')
+    except services.IgdbError:
+        messages.error(request, 'No pudimos conectar con IGDB. Intenta de nuevo en un momento.')
         return redirect('juego', juego_id=juego_id)
     if juego is None:
         raise Http404('Ese juego no existe')
@@ -130,7 +122,7 @@ def agregar_a_bitacora(request, juego_id):
     try:
         with transaction.atomic():
             Entrada.objects.create(
-                user=request.user, rawg_id=juego_id, titulo=juego['nombre'],
+                user=request.user, juego_id=juego_id, titulo=juego['nombre'],
                 imagen=juego['imagen'], horas_estimadas=juego['horas'], estado=estado,
             )
         messages.success(request, f'{juego["nombre"]} se agregó a tu bitácora.')

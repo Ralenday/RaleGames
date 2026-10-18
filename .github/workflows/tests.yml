@@ -20,7 +20,7 @@ jobs:
         run: pip install -r requirements.txt
 
       # El .env no está en el repositorio: en CI la llave se genera al vuelo
-      # y las pruebas corren en modo demo (sin RAWG_API_KEY)
+      # y las pruebas corren en modo demo (sin credenciales de IGDB)
       - name: Ejecutar pruebas
         env:
           SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY || 'llave-solo-para-ci' }}

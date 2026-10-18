@@ -31,7 +31,7 @@
           <h2>{{ col.nombre }} <span>{{ col.total }}</span></h2>
           {% for entrada, form in col.entradas %}
             <article class="entrada">
-              <a href="{% url 'juego' entrada.rawg_id %}" class="entrada__titulo">
+              <a href="{% url 'juego' entrada.juego_id %}" class="entrada__titulo">
                 {% if entrada.imagen %}<img src="{{ entrada.imagen }}" alt="">{% else %}<span class="entrada__vacio">{{ entrada.titulo|first }}</span>{% endif %}
                 <strong>{{ entrada.titulo }}</strong>
               </a>

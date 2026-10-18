@@ -1,7 +1,7 @@
 """
 Configuración del proyecto RaleGames.
 
-Los datos sensibles (SECRET_KEY, llave de la API de RAWG) se leen del archivo
+Los datos sensibles (SECRET_KEY, credenciales de la API de IGDB) se leen del archivo
 .env, que está en .gitignore y por lo tanto nunca se sube a GitHub.
 """
 
@@ -26,8 +26,10 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if h.strip()]
 
-# Llave de la API externa RAWG (https://rawg.io/apidocs)
-RAWG_API_KEY = os.environ.get('RAWG_API_KEY', '')
+# Credenciales de la API externa IGDB (https://api-docs.igdb.com).
+# IGDB pertenece a Twitch: se obtienen en https://dev.twitch.tv/console/apps
+TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID', '')
+TWITCH_CLIENT_SECRET = os.environ.get('TWITCH_CLIENT_SECRET', '')
 
 
 # Aplicaciones
@@ -92,7 +94,7 @@ DATABASES = {
     }
 }
 
-# Caché en memoria: evita llamar a RAWG una y otra vez con la misma búsqueda
+# Caché en memoria: evita llamar a IGDB una y otra vez con la misma búsqueda
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',

@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -24,7 +24,7 @@ def datos_registro(**cambios):
 
 
 # Todas las pruebas usan el modo demo: no dependen de internet ni de la llave
-@override_settings(RAWG_API_KEY='')
+@override_settings(TWITCH_CLIENT_ID='', TWITCH_CLIENT_SECRET='')
 class PantallasTests(TestCase):
     def test_inicio_muestra_juegos(self):
         respuesta = self.client.get(reverse('inicio'))
@@ -54,7 +54,7 @@ class PantallasTests(TestCase):
         self.assertRedirects(respuesta, f"{reverse('login')}?next={reverse('bitacora')}")
 
 
-@override_settings(RAWG_API_KEY='')
+@override_settings(TWITCH_CLIENT_ID='', TWITCH_CLIENT_SECRET='')
 class RegistroTests(TestCase):
     def test_registro_correcto_crea_usuario_y_perfil(self):
         respuesta = self.client.post(reverse('registro'), datos_registro())
@@ -92,7 +92,7 @@ class RegistroTests(TestCase):
         self.assertContains(respuesta, 'Debes aceptar')
 
 
-@override_settings(RAWG_API_KEY='')
+@override_settings(TWITCH_CLIENT_ID='', TWITCH_CLIENT_SECRET='')
 class BitacoraTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('axel', 'a@ejemplo.com', 'Contrasena2026!')
@@ -114,7 +114,7 @@ class BitacoraTests(TestCase):
         self.assertEqual(self.client.get(reverse('agregar', args=[2])).status_code, 405)
 
     def test_actualizar_entrada(self):
-        entrada = Entrada.objects.create(user=self.user, rawg_id=1, titulo='Hollow Knight')
+        entrada = Entrada.objects.create(user=self.user, juego_id=1, titulo='Hollow Knight')
         self.client.post(reverse('actualizar', args=[entrada.pk]),
                          {f'e{entrada.pk}-estado': 'terminado', f'e{entrada.pk}-calificacion': 5, f'e{entrada.pk}-nota': 'GOTY'})
         entrada.refresh_from_db()
@@ -122,18 +122,18 @@ class BitacoraTests(TestCase):
 
     def test_no_puede_tocar_bitacora_ajena(self):
         otro = User.objects.create_user('intruso', 'i@ejemplo.com', 'Contrasena2026!')
-        ajena = Entrada.objects.create(user=otro, rawg_id=1, titulo='Hollow Knight')
+        ajena = Entrada.objects.create(user=otro, juego_id=1, titulo='Hollow Knight')
         self.assertEqual(self.client.post(reverse('eliminar', args=[ajena.pk])).status_code, 404)
         self.assertTrue(Entrada.objects.filter(pk=ajena.pk).exists())
 
     def test_bitacora_muestra_resumen(self):
-        Entrada.objects.create(user=self.user, rawg_id=1, titulo='Hollow Knight', estado='terminado', horas_estimadas=30)
+        Entrada.objects.create(user=self.user, juego_id=1, titulo='Hollow Knight', estado='terminado', horas_estimadas=30)
         respuesta = self.client.get(reverse('bitacora'))
         self.assertContains(respuesta, 'Hollow Knight')
         self.assertEqual(respuesta.context['horas'], 30)
 
 
-@override_settings(RAWG_API_KEY='')
+@override_settings(TWITCH_CLIENT_ID='', TWITCH_CLIENT_SECRET='')
 class RuletaTests(TestCase):
     def test_cada_animo_devuelve_un_juego_que_coincide(self):
         for clave, animo in services.ANIMOS.items():
@@ -151,7 +151,7 @@ class RuletaTests(TestCase):
         self.assertIsNone(services.girar_ruleta('hackear'))
 
 
-@override_settings(RAWG_API_KEY='')
+@override_settings(TWITCH_CLIENT_ID='', TWITCH_CLIENT_SECRET='')
 class ApiTests(TestCase):
     def setUp(self):
         cache.clear()  # reinicia los contadores de throttling
@@ -167,16 +167,16 @@ class ApiTests(TestCase):
 
     def test_crud_bitacora_con_jwt(self):
         self.api.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token()}')
-        creada = self.api.post('/api/bitacora/', {'rawg_id': 5, 'titulo': 'Hades', 'estado': 'jugando'})
+        creada = self.api.post('/api/bitacora/', {'juego_id': 5, 'titulo': 'Hades', 'estado': 'jugando'})
         self.assertEqual(creada.status_code, 201)
-        repetida = self.api.post('/api/bitacora/', {'rawg_id': 5, 'titulo': 'Hades'})
+        repetida = self.api.post('/api/bitacora/', {'juego_id': 5, 'titulo': 'Hades'})
         self.assertEqual(repetida.status_code, 400)
         lista = self.api.get('/api/bitacora/')
         self.assertEqual(len(lista.data), 1)
 
     def test_api_solo_lista_entradas_propias(self):
         otro = User.objects.create_user('otro', 'o@ejemplo.com', 'Contrasena2026!')
-        Entrada.objects.create(user=otro, rawg_id=1, titulo='Hollow Knight')
+        Entrada.objects.create(user=otro, juego_id=1, titulo='Hollow Knight')
         self.api.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token()}')
         self.assertEqual(self.api.get('/api/bitacora/').data, [])
 
@@ -191,29 +191,59 @@ class ApiTests(TestCase):
         self.assertEqual(respuesta.data['juegos'][0]['nombre'], 'Portal 2')
 
 
-@override_settings(RAWG_API_KEY='llave-de-prueba')
-class RawgClienteTests(TestCase):
-    """Prueba el cliente real de RAWG simulando la respuesta (sin internet)."""
+def respuesta(codigo, datos):
+    simulada = MagicMock(status_code=codigo)
+    simulada.json.return_value = datos
+    return simulada
+
+
+TOKEN = respuesta(200, {'access_token': 'token-de-prueba', 'expires_in': 3600})
+
+
+@override_settings(TWITCH_CLIENT_ID='id-de-prueba', TWITCH_CLIENT_SECRET='secreto-de-prueba')
+class IgdbClienteTests(TestCase):
+    """Prueba el cliente real de IGDB simulando las respuestas (sin internet)."""
 
     def setUp(self):
         cache.clear()
 
-    @patch('games.services.requests.get')
-    def test_envia_la_llave_y_normaliza(self, get):
-        get.return_value.status_code = 200
-        get.return_value.json.return_value = {
-            'next': None,
-            'results': [{'id': 3498, 'name': 'Grand Theft Auto V', 'background_image': 'https://img/gta.jpg',
-                         'released': '2013-09-17', 'rating': 4.47, 'metacritic': 92, 'playtime': 74,
-                         'genres': [{'name': 'Action'}], 'platforms': [{'platform': {'name': 'PC'}}]}],
-        }
-        resultado = services.buscar_juegos('gta')
-        self.assertEqual(get.call_args.kwargs['params']['key'], 'llave-de-prueba')
-        self.assertEqual(resultado['juegos'][0]['nombre'], 'Grand Theft Auto V')
-        self.assertEqual(resultado['juegos'][0]['plataformas'], ['PC'])
+    @patch('games.services.requests.post')
+    def test_pide_token_y_normaliza(self, post):
+        juego = {'id': 1942, 'name': 'The Witcher 3: Wild Hunt', 'first_release_date': 1431993600,
+                 'total_rating': 93.4, 'aggregated_rating': 92.6, 'genres': [{'name': 'Role-playing (RPG)'}],
+                 'platforms': [{'name': 'PC (Microsoft Windows)'}], 'cover': {'image_id': 'co1wyy'}}
+        tiempos = [{'game_id': 1942, 'normally': 51 * 3600}]
+        post.side_effect = [TOKEN, respuesta(200, [juego]), respuesta(200, tiempos)]
 
-    @patch('games.services.requests.get')
-    def test_error_de_rawg_muestra_aviso(self, get):
-        get.return_value.status_code = 500
-        respuesta = self.client.get(reverse('explorar'))
-        self.assertContains(respuesta, 'No pudimos conectar con RAWG')
+        resultado = services.buscar_juegos('witcher')
+
+        # 1) token de Twitch con las credenciales del .env
+        self.assertEqual(post.call_args_list[0].kwargs['data']['client_secret'], 'secreto-de-prueba')
+        # 2) consulta a IGDB con el token y el Client-ID en las cabeceras
+        cabeceras = post.call_args_list[1].kwargs['headers']
+        self.assertEqual(cabeceras, {'Client-ID': 'id-de-prueba', 'Authorization': 'Bearer token-de-prueba'})
+        self.assertIn(b'search "witcher"', post.call_args_list[1].kwargs['data'])
+
+        juego = resultado['juegos'][0]
+        self.assertEqual(juego['nombre'], 'The Witcher 3: Wild Hunt')
+        self.assertEqual(juego['lanzamiento'], '2015-05-19')
+        self.assertEqual((juego['rating'], juego['metacritic'], juego['horas']), (4.7, 93, 51))
+        self.assertIn('t_cover_big/co1wyy.jpg', juego['imagen'])
+
+    @patch('games.services.requests.post')
+    def test_comillas_no_rompen_la_consulta(self, post):
+        post.side_effect = [TOKEN, respuesta(200, [])]
+        services.buscar_juegos('a"; fields *')
+        self.assertIn(b'search "a; fields *";', post.call_args_list[1].kwargs['data'])
+
+    @patch('games.services.requests.post')
+    def test_token_vencido_se_renueva(self, post):
+        post.side_effect = [TOKEN, respuesta(401, {}), TOKEN, respuesta(200, [])]
+        self.assertEqual(services.buscar_juegos('zelda')['juegos'], [])
+        self.assertEqual(post.call_count, 4)
+
+    @patch('games.services.requests.post')
+    def test_credenciales_malas_muestran_aviso(self, post):
+        post.return_value = respuesta(400, {})
+        respuesta_web = self.client.get(reverse('explorar'))
+        self.assertContains(respuesta_web, 'No pudimos conectar con IGDB')

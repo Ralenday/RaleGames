@@ -6,13 +6,13 @@ from .models import Entrada
 class EntradaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entrada
-        fields = ['id', 'rawg_id', 'titulo', 'imagen', 'horas_estimadas', 'estado',
+        fields = ['id', 'juego_id', 'titulo', 'imagen', 'horas_estimadas', 'estado',
                   'calificacion', 'nota', 'creado', 'actualizado']
         read_only_fields = ['creado', 'actualizado']
 
-    def validate_rawg_id(self, valor):
+    def validate_juego_id(self, valor):
         user = self.context['request'].user
-        repetidas = Entrada.objects.filter(user=user, rawg_id=valor)
+        repetidas = Entrada.objects.filter(user=user, juego_id=valor)
         if self.instance:
             repetidas = repetidas.exclude(pk=self.instance.pk)
         if repetidas.exists():

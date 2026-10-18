@@ -9,7 +9,7 @@
       <h1>¿No sabes qué jugar hoy?</h1>
       <p class="hero__texto">
         Dinos cómo te sientes y cuánto tiempo tienes: la ruleta de RaleGames elige un juego por ti
-        entre más de 500,000 títulos. Después llévalo a tu bitácora y registra lo que juegas,
+        entre cientos de miles de títulos. Después llévalo a tu bitácora y registra lo que juegas,
         lo que terminas y lo que abandonas.
       </p>
       <div class="hero__acciones">
@@ -52,11 +52,11 @@
 
 <section class="contenedor seccion">
   <div class="seccion__cabecera">
-    <h2>Lo más jugado este año</h2>
+    <h2>Lo mejor valorado del último año</h2>
     <a href="{% url 'explorar' %}">Ver más →</a>
   </div>
   {% if error_api %}
-    <p class="vacio">No pudimos conectar con RAWG en este momento. Intenta recargar en un minuto.</p>
+    <p class="vacio">No pudimos conectar con IGDB en este momento. Intenta recargar en un minuto.</p>
   {% else %}
     <div class="rejilla">
       {% for juego in populares %}{% include 'games/_tarjeta.html' %}{% endfor %}

@@ -1,5 +1,5 @@
 # games/demo_data.py
-# Catálogo de ejemplo que se usa cuando no hay RAWG_API_KEY en el .env,
+# Catálogo de ejemplo que se usa cuando no hay credenciales de Twitch/IGDB en el .env,
 # para que la página funcione (y las pruebas corran) sin conexión.
 # Los datos tienen el mismo formato que devuelve services.normalizar_juego().
 
@@ -14,7 +14,7 @@ JUEGOS_DEMO = [
     },
     {
         'id': 2, 'nombre': 'Stardew Valley', 'lanzamiento': '2016-02-26', 'rating': 4.4, 'metacritic': 89,
-        'generos': ['Simulación', 'Indie', 'RPG'], 'slugs': ['simulation', 'indie', 'role-playing-games-rpg'],
+        'generos': ['Simulación', 'Indie', 'RPG'], 'slugs': ['simulation', 'indie', 'rpg'],
         'tags': ['relaxing', 'co-op'], 'plataformas': ['PC', 'Nintendo Switch', 'PlayStation 4', 'Móvil'],
         'horas': 50,
         'descripcion': 'Hereda la granja de tu abuelo, cultiva, pesca, haz amigos en el pueblo y olvídate '
@@ -22,7 +22,7 @@ JUEGOS_DEMO = [
     },
     {
         'id': 3, 'nombre': 'The Witcher 3: Wild Hunt', 'lanzamiento': '2015-05-18', 'rating': 4.7, 'metacritic': 93,
-        'generos': ['RPG', 'Acción', 'Aventura'], 'slugs': ['role-playing-games-rpg', 'action', 'adventure'],
+        'generos': ['RPG', 'Acción', 'Aventura'], 'slugs': ['rpg', 'action', 'adventure'],
         'tags': ['story-rich', 'open-world'], 'plataformas': ['PC', 'PlayStation 5', 'Xbox Series X', 'Nintendo Switch'],
         'horas': 60,
         'descripcion': 'Geralt de Rivia busca a Ciri en un mundo abierto enorme, con decisiones que cambian '
@@ -38,7 +38,7 @@ JUEGOS_DEMO = [
     },
     {
         'id': 5, 'nombre': 'Hades', 'lanzamiento': '2020-09-17', 'rating': 4.6, 'metacritic': 93,
-        'generos': ['Acción', 'Indie', 'RPG'], 'slugs': ['action', 'indie', 'role-playing-games-rpg'],
+        'generos': ['Acción', 'Indie', 'RPG'], 'slugs': ['action', 'indie', 'rpg'],
         'tags': ['roguelike', 'story-rich'], 'plataformas': ['PC', 'Nintendo Switch', 'PlayStation 5', 'Xbox Series X'],
         'horas': 22,
         'descripcion': 'Zagreo intenta escapar del inframundo una y otra vez. Cada intento es distinto y la '

@@ -34,7 +34,7 @@
 
   {% if modo_demo %}
     <div class="aviso-demo">
-      Modo demo: no hay <code>RAWG_API_KEY</code> en el archivo <code>.env</code>, se muestran 16 juegos de ejemplo.
+      Modo demo: faltan <code>TWITCH_CLIENT_ID</code> y <code>TWITCH_CLIENT_SECRET</code> en el archivo <code>.env</code>, se muestran 16 juegos de ejemplo.
     </div>
   {% endif %}
 
@@ -53,7 +53,7 @@
   <footer class="pie">
     <div class="contenedor">
       <p><strong>RaleGames</strong> — no vendemos juegos, te ayudamos a decidir cuál jugar.</p>
-      <p>Datos de videojuegos proporcionados por <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>.</p>
+      <p>Datos de videojuegos proporcionados por <a href="https://www.igdb.com" target="_blank" rel="noopener">IGDB.com</a>.</p>
     </div>
   </footer>
   {% block scripts %}{% endblock %}

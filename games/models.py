@@ -20,7 +20,7 @@ class Perfil(models.Model):
         return f'{self.user.username} ({self.get_plataforma_display()})'
 
 
-# Bitácora: los juegos que el usuario guarda desde RAWG con su estado personal
+# Bitácora: los juegos que el usuario guarda desde IGDB con su estado personal
 class Entrada(models.Model):
     ESTADOS = [
         ('pendiente', 'Quiero jugarlo'),
@@ -30,7 +30,7 @@ class Entrada(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='entradas')
-    rawg_id = models.PositiveIntegerField(verbose_name='ID en RAWG')
+    juego_id = models.PositiveIntegerField(verbose_name='ID en IGDB')
     titulo = models.CharField(max_length=255)
     imagen = models.URLField(blank=True)
     horas_estimadas = models.PositiveIntegerField(default=0)
@@ -49,7 +49,7 @@ class Entrada(models.Model):
         ordering = ['-actualizado']
         # Un mismo juego no se puede guardar dos veces por usuario
         constraints = [
-            models.UniqueConstraint(fields=['user', 'rawg_id'], name='juego_unico_por_usuario'),
+            models.UniqueConstraint(fields=['user', 'juego_id'], name='juego_unico_por_usuario'),
         ]
 
     def __str__(self):
