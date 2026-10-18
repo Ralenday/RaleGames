@@ -194,17 +194,23 @@ def buscar_juegos(texto='', genero='', pagina=1):
     if genero in GENEROS:
         _, campo, id_igdb = GENEROS[genero]
         filtros.append(f'{campo} = ({id_igdb})')
-    consulta = f'fields {CAMPOS_LISTA}; limit {POR_PAGINA + 1}; offset {(pagina - 1) * POR_PAGINA};'
     texto = _limpiar(texto)
     if texto:
-        # "search" ordena por relevancia, no se puede combinar con sort
-        consulta += f' search "{texto}";'
-    else:
-        filtros.append('total_rating_count > 0')
-        consulta += ' sort total_rating_count desc;'
-    consulta += f' where {" & ".join(filtros)};'
+        # "search" ordena solo por parecido del nombre y no se puede combinar con sort:
+        # se piden 50 coincidencias y se ordenan aquí por popularidad (una sola página)
+        resultados = _consultar('games', (
+            f'fields {CAMPOS_LISTA}, total_rating_count; search "{texto}"; '
+            f'where {" & ".join(filtros)}; limit 50;'
+        ))
+        resultados.sort(key=lambda j: -(j.get('total_rating_count') or 0))
+        juegos = [normalizar_juego(j) for j in resultados[:POR_PAGINA]]
+        return {'juegos': _agregar_horas(juegos), 'hay_mas': False}
 
-    resultados = _consultar('games', consulta)
+    filtros.append('total_rating_count > 0')
+    resultados = _consultar('games', (
+        f'fields {CAMPOS_LISTA}; where {" & ".join(filtros)}; sort total_rating_count desc; '
+        f'limit {POR_PAGINA + 1}; offset {(pagina - 1) * POR_PAGINA};'
+    ))
     juegos = [normalizar_juego(j) for j in resultados[:POR_PAGINA]]
     # Se pidió uno de más solo para saber si existe una página siguiente
     return {'juegos': _agregar_horas(juegos), 'hay_mas': len(resultados) > POR_PAGINA}
