@@ -12,7 +12,7 @@ lo que estás jugando, lo que terminaste y lo que abandonaste.
 
 | Ruta | Pantalla |
 | --- | --- |
-| `/` | **Inicio**: juego del día, ánimos y lo mejor valorado del último año |
+| `/` | **Inicio**: juego del día, ánimos y lo más popular del último año |
 | `/registro/` | **Registro** con validación en el navegador (JS) y en el servidor (Django) |
 | `/entrar/` | Inicio de sesión |
 | `/explorar/` | Buscador de juegos con filtros por género (API IGDB) |

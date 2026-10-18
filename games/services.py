@@ -2,6 +2,7 @@
 # Capa de servicios: aquí vive el consumo de la API externa IGDB y la lógica
 # de la ruleta, separadas de las vistas.
 
+import hashlib
 import random
 import time
 from datetime import datetime, timezone
@@ -22,6 +23,8 @@ CACHE_SEGUNDOS = 60 * 30
 CAMPOS_LISTA = ('name, first_release_date, total_rating, aggregated_rating, genres.name, '
                 'platforms.name, cover.image_id, artworks.image_id, screenshots.image_id')
 CAMPOS_DETALLE = CAMPOS_LISTA + ', summary, storyline, url, involved_companies.company.name, involved_companies.developer'
+# Solo juegos completos (principal, remake, remaster, edición ampliada): sin DLCs, paquetes ni ports
+SOLO_JUEGOS = 'game_type = (0,8,9,10) & version_parent = null'
 
 
 class IgdbError(Exception):
@@ -63,7 +66,8 @@ def _token(renovar=False):
 def _consultar(endpoint, consulta):
     """Manda una consulta en lenguaje Apicalypse a IGDB. Las credenciales
     nunca llegan al navegador: el frontend solo habla con nuestro servidor."""
-    clave_cache = f'igdb:{endpoint}:{consulta}'
+    # Las consultas son largas: se usa su hash como llave de la caché
+    clave_cache = 'igdb:' + hashlib.sha256(f'{endpoint}:{consulta}'.encode()).hexdigest()
     datos = cache.get(clave_cache)
     if datos is not None:
         return datos
@@ -186,7 +190,7 @@ def buscar_juegos(texto='', genero='', pagina=1):
             juegos = [j for j in juegos if genero in j['slugs'] + j['tags']]
         return {'juegos': juegos, 'hay_mas': False}
 
-    filtros = []
+    filtros = [SOLO_JUEGOS]
     if genero in GENEROS:
         _, campo, id_igdb = GENEROS[genero]
         filtros.append(f'{campo} = ({id_igdb})')
@@ -198,8 +202,7 @@ def buscar_juegos(texto='', genero='', pagina=1):
     else:
         filtros.append('total_rating_count > 0')
         consulta += ' sort total_rating_count desc;'
-    if filtros:
-        consulta += f' where {" & ".join(filtros)};'
+    consulta += f' where {" & ".join(filtros)};'
 
     resultados = _consultar('games', consulta)
     juegos = [normalizar_juego(j) for j in resultados[:POR_PAGINA]]
@@ -208,7 +211,7 @@ def buscar_juegos(texto='', genero='', pagina=1):
 
 
 def populares():
-    """Juegos mejor valorados que salieron en el último año."""
+    """Juegos con más reseñas de la comunidad entre los que salieron en el último año."""
     if modo_demo():
         return sorted((_demo(j) for j in JUEGOS_DEMO), key=lambda j: -j['metacritic'])[:8]
 
@@ -216,8 +219,8 @@ def populares():
     hace_un_ano = ahora - 365 * 24 * 3600
     resultados = _consultar('games', (
         f'fields {CAMPOS_LISTA}; '
-        f'where first_release_date >= {hace_un_ano} & first_release_date <= {ahora} & total_rating_count > 5; '
-        'sort total_rating desc; limit 8;'
+        f'where first_release_date >= {hace_un_ano} & first_release_date <= {ahora} & total_rating_count > 0 & {SOLO_JUEGOS}; '
+        'sort total_rating_count desc; limit 8;'
     ))
     return _agregar_horas([normalizar_juego(j) for j in resultados])
 
@@ -337,7 +340,7 @@ def girar_ruleta(clave_animo, clave_tiempo='cualquiera'):
         # Los 100 juegos más valorados por la comunidad que encajan con el ánimo
         resultados = _consultar('games', (
             f'fields {CAMPOS_LISTA}; '
-            f'where {animo.filtro_igdb()} & total_rating_count > 50 & total_rating > 70; '
+            f'where {animo.filtro_igdb()} & total_rating_count > 50 & total_rating > 70 & {SOLO_JUEGOS}; '
             'sort total_rating_count desc; limit 100;'
         ))
         candidatos = _agregar_horas([normalizar_juego(j) for j in resultados])
